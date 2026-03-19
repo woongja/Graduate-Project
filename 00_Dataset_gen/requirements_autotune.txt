@@ -1,0 +1,11 @@
+numpy==1.23.5
+librosa==0.10.0.post2
+matplotlib==3.5.3
+soundfile==0.12.1
+scipy==1.9.3
+psola==0.0.1
+pandas==1.5.3
+pyyaml==6.0.1
+pydub==0.25.1
+audiomentations==0.33.0
+torchaudio==0.13.1
