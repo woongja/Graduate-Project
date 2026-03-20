@@ -22,6 +22,7 @@ from .autotune import AutoTuneAugmentor
 from .echo import EchoAugmentor
 from .amplitude_modulation import AmplitudeModulationAugmentor
 from .gaussian_v1 import GaussianAugmentor as GaussianAugmentorV1
+from .background_music_deepen import BackgroundMusicAugmentor
 from .background_music_deepen import BackgroundMusicAugmentor as BackgroundMusicAugmentorDeepen
 from .background_noise_deepen import BackgroundNoiseAugmentor as BackgroundNoiseAugmentorDeepen
 from .freq_operation_deepen import FrequencyOperationAugmentor as FrequencyOperationAugmentorDeepen
