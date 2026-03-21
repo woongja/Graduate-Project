@@ -1,0 +1,32 @@
+# ── AST Model Config ──────────────────────────────────────────
+model: ast
+model_size: small224        # tiny224 | small224 | base224 | base384
+imagenet_pretrain: true
+audioset_pretrain: false
+audioset_pretrain_path: null
+
+# ── Audio / Spectrogram ───────────────────────────────────────
+target_length: 512          # time frames (~5s at 10ms hop)
+fstride: 10                 # patch stride on frequency axis
+tstride: 10                 # patch stride on time axis
+
+# ── SpecAugment ───────────────────────────────────────────────
+freqm: 48                   # frequency masking bins
+timem: 192                  # time masking frames
+
+# ── Normalization ─────────────────────────────────────────────
+norm_mean: -4.2677393       # AudioSet baseline (recompute with get_norm_stats if needed)
+norm_std:   4.5689974
+
+# ── Training ──────────────────────────────────────────────────
+batch_size: 24
+num_epochs: 100
+learning_rate: 1.0e-4
+early_stop_patience: 5
+num_workers: 4
+
+# ── Paths ─────────────────────────────────────────────────────
+train_protocol: protocols/train_protocol.txt
+eval_protocol:  protocols/eval_protocol.txt
+save_path: out/ast
+log_dir:   runs/ast

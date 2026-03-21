@@ -1,0 +1,28 @@
+# ── SSAST-Base-Patch-400 Fine-tuning Config ───────────────────
+model: ssast
+model_size: base
+pretrained_mdl_path: ../pretrained_model/SSAST-Base-Patch-400.pth
+
+fshape: 16
+tshape: 16
+fstride: 10
+tstride: 10
+
+target_length: 512
+
+freqm: 48
+timem: 192
+
+norm_mean: -4.2677393
+norm_std:   4.5689974
+
+batch_size: 32
+num_epochs: 100
+learning_rate: 1.0e-4
+early_stop_patience: 10
+num_workers: 4
+
+train_protocol: ../protocols/train_protocol.txt
+eval_protocol:  ../protocols/eval_protocol.txt
+save_path: ../out/ssast_base_patch_400
+log_dir:   ../runs/ssast_base_patch_400

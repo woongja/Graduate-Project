@@ -1,0 +1,11 @@
+llvmlite==0.38.0
+matplotlib==3.4.2
+numba==0.55.0
+numpy==1.20.3
+scikit-learn
+scipy
+sklearn
+timm
+wget
+zipp
+# torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129
