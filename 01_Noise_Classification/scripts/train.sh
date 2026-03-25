@@ -1,49 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# 통합 학습 스크립트
+# 사용법: bash train.sh <config_name>
+# 예시:
+#   bash train.sh ssast_base_patch_400
+#   bash train.sh ssast_small_patch_400
+#   bash train.sh ssast_tiny_patch_400
+#   bash train.sh htsat
 
-# 기본 설정
-PROTOCOL_FILE="/home/woongjae/noise-tracing/multi-feature_fusion/ICASSP2026/protocols/NC_protocol.txt"
-BATCH_SIZE=32
-NUM_EPOCHS=100
-LEARNING_RATE=1e-5
-NUM_CLASSES=9
-SAVE_PATH="out/icassp_v3.pth"
-EARLY_STOP_PATIENCE=3
-LOG_DIR="runs/icassp_preprocessed"  # TensorBoard 로그 디렉토리
-input_height=128   # freq axis for spec
-input_width=126    # time axis
-f0_len=126      # F0 time frame 수
-NUM_WORKERS=8
-PREPROCESSED_DIR="/data/woongjae/preprocess/icassp/NC"
+set -e
+cd "$(dirname "$0")"
 
-# 전처리 여부 확인
-if [ ! -d "$PREPROCESSED_DIR" ]; then
-    echo "전처리된 데이터가 없습니다. 전처리를 먼저 실행합니다..."
-    python preprocess_features.py \
-        --protocol_file $PROTOCOL_FILE \
-        --output_dir $PREPROCESSED_DIR \
-        --subset all \
-    
-    if [ $? -ne 0 ]; then
-        echo "전처리 실패!"
-        exit 1
-    fi
+CONFIG_NAME="${1:?'사용법: bash train.sh <config_name>  (예: ssast_base_patch_400)'}"
+CONFIG="../config/${CONFIG_NAME}.yaml"
+GPU="MIG-56c6e426-3d07-52cb-aa59-73892edacb69"
+
+if [ ! -f "$CONFIG" ]; then
+    echo "[오류] config 파일을 찾을 수 없습니다: $CONFIG"
+    exit 1
 fi
 
-# 출력 디렉토리 생성
-mkdir -p $(dirname $SAVE_PATH)
+echo "=============================="
+echo "Config : $CONFIG"
+echo "GPU    : $GPU"
+echo "=============================="
 
-# Training 실행 (전처리된 데이터 사용)
-CUDA_VISIBLE_DEVICES=0 python train.py \
-    --is_train \
-    --preprocessed_dir $PREPROCESSED_DIR \
-    --batch_size $BATCH_SIZE \
-    --num_epochs $NUM_EPOCHS \
-    --learning_rate $LEARNING_RATE \
-    --num_classes $NUM_CLASSES \
-    --early_stop_patience $EARLY_STOP_PATIENCE \
-    --save_path $SAVE_PATH \
-    --log_dir $LOG_DIR \
-    --input_height $input_height \
-    --input_width $input_width \
-    --f0_len $f0_len \
-    --num_workers $NUM_WORKERS
+OMP_NUM_THREADS=4 CUDA_VISIBLE_DEVICES=$GPU python ../train.py \
+    --config "$CONFIG" \
+    --is_train

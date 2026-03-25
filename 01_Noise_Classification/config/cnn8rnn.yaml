@@ -1,0 +1,22 @@
+# ── CNN8RNN Fine-tuning Config ──────────────────────────────────
+model: cnn8rnn
+pretrained_mdl_path: ../pretrained_model/cnn8rnn-audioset-sed
+
+# 오디오 설정 (HTSAT와 동일 32kHz)
+sample_rate: 32000
+clip_duration: 10.0
+
+# 학습 설정
+batch_size: 32
+num_epochs: 100
+learning_rate: 1.0e-4
+early_stop_patience: 10
+num_workers: 4
+
+# 프로토콜 파일
+train_protocol: ../protocols/train_protocol.txt
+eval_protocol:  ../protocols/eval_protocol.txt
+
+# 저장 경로
+save_path: ../out/cnn8rnn
+log_dir:   ../runs/cnn8rnn

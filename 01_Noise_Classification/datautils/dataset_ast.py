@@ -1,6 +1,7 @@
 import torch
 import torchaudio
 from torch.utils.data import Dataset
+from datautils.audio_io import load_audio
 
 # aug_type → integer label mapping (10 classes)
 # high_pass_filter and low_pass_filter are merged as band_pass_filter
@@ -95,7 +96,7 @@ class ASTDataset(Dataset):
         return len(self.samples)
 
     def _load_fbank(self, path):
-        waveform, sr = torchaudio.load(path)
+        waveform, sr = load_audio(path)
         waveform = waveform - waveform.mean()
         fbank = torchaudio.compliance.kaldi.fbank(
             waveform,

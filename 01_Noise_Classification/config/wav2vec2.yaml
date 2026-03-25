@@ -1,0 +1,26 @@
+# ── Wav2Vec2-base-AudioSet Fine-tuning Config ───────────────────
+model: wav2vec2
+pretrained_mdl_path: ../pretrained_model/wav2vec2-base-audioset
+
+# 오디오 설정
+sample_rate: 16000
+clip_duration: 10.0
+
+# 모델 설정
+pooling: mean
+freeze_feature_extractor: true
+
+# 학습 설정
+batch_size: 16
+num_epochs: 100
+learning_rate: 1.0e-4
+early_stop_patience: 10
+num_workers: 4
+
+# 프로토콜 파일
+train_protocol: ../protocols/train_protocol.txt
+eval_protocol:  ../protocols/eval_protocol.txt
+
+# 저장 경로
+save_path: ../out/wav2vec2
+log_dir:   ../runs/wav2vec2

@@ -72,6 +72,84 @@ def build_model(args, device):
             mfcc_shape=(1, 13, args.input_width),
             f0_len=args.f0_len,
         )
+    elif args.model == 'htsat':
+        from model.htsat_model import HTSATModel
+        model = HTSATModel(
+            num_classes=NUM_CLASSES,
+            load_pretrained_path=args.pretrained_mdl_path,
+        )
+    elif args.model == 'hubert':
+        from model.hubert_model import HubertClassifier
+        model = HubertClassifier(
+            num_classes=NUM_CLASSES,
+            pretrained_path=args.pretrained_mdl_path,
+            pooling=args.pooling,
+            freeze_feature_extractor=args.freeze_feature_extractor,
+        )
+    elif args.model == 'wav2vec2':
+        from model.wav2vec2_model import Wav2Vec2Classifier
+        model = Wav2Vec2Classifier(
+            num_classes=NUM_CLASSES,
+            pretrained_path=args.pretrained_mdl_path,
+            pooling=args.pooling,
+            freeze_feature_extractor=args.freeze_feature_extractor,
+        )
+    elif args.model == 'cnn8rnn':
+        from model.cnn8rnn_model import CNN8RNNClassifier
+        model = CNN8RNNClassifier(
+            num_classes=NUM_CLASSES,
+            pretrained_path=args.pretrained_mdl_path,
+        )
+    elif args.model == 'cnnlstm':
+        from model.cnnlstm import CNNLSTMClassifier
+        model = CNNLSTMClassifier(num_classes=NUM_CLASSES)
+    elif args.model == 'cnnlstm_2ff':
+        from model.cnnlstm_2ff import create_cnnlstm_2ff
+        model = create_cnnlstm_2ff(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            fusion_hidden_dim=getattr(args, 'fusion_hidden_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnnlstm_3ff':
+        from model.cnnlstm_3ff import create_cnnlstm_3ff
+        model = create_cnnlstm_3ff(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            fusion_hidden_dim=getattr(args, 'fusion_hidden_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnnlstm_3ff_interaction':
+        from model.cnnlstm_3ff_interaction import create_cnnlstm_3ff_interaction
+        model = create_cnnlstm_3ff_interaction(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            interaction_hidden_dim=getattr(args, 'interaction_hidden_dim', 1024),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnnlstm_3ff_weight':
+        from model.cnnlstm_3ff_weight import create_cnnlstm_3ff_weight
+        model = create_cnnlstm_3ff_weight(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'dass':
+        from model.dass_model import DASSClassifier
+        model = DASSClassifier(
+            num_classes=NUM_CLASSES,
+            pretrained_path=args.pretrained_mdl_path,
+            model_size=args.model_size,
+            imagenet_pretrain=args.imagenet_pretrain,
+        )
+    elif args.model == 'clap':
+        from model.clap_model import CLAPClassifier
+        model = CLAPClassifier(
+            num_classes=NUM_CLASSES,
+            pretrained_path=args.pretrained_mdl_path,
+            amodel=getattr(args, 'amodel', 'HTSAT-tiny'),
+            freeze_encoder=getattr(args, 'freeze_encoder', False),
+        )
     else:
         raise ValueError(f'Unknown model: {args.model}')
 
@@ -79,7 +157,7 @@ def build_model(args, device):
 
 
 def build_loaders(args):
-    if args.model in ('ast', 'ssast'):
+    if args.model in ('ast', 'ssast', 'dass'):
         from datautils.dataset_ast import ASTDataset
         train_ds = ASTDataset(
             args.train_protocol, split='train',
@@ -95,6 +173,68 @@ def build_loaders(args):
             mean=args.norm_mean, std=args.norm_std,
             is_train=False,
         )
+    elif args.model == 'cnnlstm':
+        from datautils.dataset_cnnlstm import CNNLSTMDataset
+        train_ds = CNNLSTMDataset(
+            args.train_protocol, split='train',
+            clip_duration=args.clip_duration, is_train=True,
+        )
+        dev_ds = CNNLSTMDataset(
+            args.train_protocol, split='dev',
+            clip_duration=args.clip_duration, is_train=False,
+        )
+    elif args.model == 'cnnlstm_2ff':
+        from datautils.dataset_cnnlstm_2ff import CNNLSTM_2FF_Dataset, collate_2ff
+        f0_method = getattr(args, 'f0_method', 'crepe')
+        train_ds = CNNLSTM_2FF_Dataset(
+            args.train_protocol, split='train',
+            clip_duration=args.clip_duration, is_train=True,
+            f0_method=f0_method
+        )
+        dev_ds = CNNLSTM_2FF_Dataset(
+            args.train_protocol, split='dev',
+            clip_duration=args.clip_duration, is_train=False,
+            f0_method=f0_method
+        )
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+        from datautils.dataset_cnnlstm_3ff import CNNLSTM_3FF_Dataset, collate_3ff
+        f0_method = getattr(args, 'f0_method', 'crepe')
+        train_ds = CNNLSTM_3FF_Dataset(
+            args.train_protocol, split='train',
+            clip_duration=args.clip_duration, is_train=True,
+            f0_method=f0_method
+        )
+        dev_ds = CNNLSTM_3FF_Dataset(
+            args.train_protocol, split='dev',
+            clip_duration=args.clip_duration, is_train=False,
+            f0_method=f0_method
+        )
+    elif args.model == 'clap':
+        from datautils.dataset_clap import CLAPDataset
+        train_ds = CLAPDataset(
+            args.train_protocol, split='train',
+            clip_duration=args.clip_duration, is_train=True,
+        )
+        dev_ds = CLAPDataset(
+            args.train_protocol, split='dev',
+            clip_duration=args.clip_duration, is_train=False,
+        )
+    elif args.model in ('htsat', 'hubert', 'wav2vec2', 'cnn8rnn'):
+        ds_cls = None
+        if args.model in ('htsat', 'cnn8rnn'):
+            from datautils.dataset_htsat import HTSATDataset as ds_cls
+        else:
+            from datautils.dataset_hubert import HubertDataset as ds_cls
+        train_ds = ds_cls(
+            args.train_protocol, split='train',
+            clip_duration=args.clip_duration,
+            is_train=True,
+        )
+        dev_ds = ds_cls(
+            args.train_protocol, split='dev',
+            clip_duration=args.clip_duration,
+            is_train=False,
+        )
     elif args.model == 'fusion':
         from datautils.data_multi_fusion import MultiFeatureDataset, gen_list
         d_meta, train_ids = gen_list(args.protocol_file, is_train=True)
@@ -104,25 +244,66 @@ def build_loaders(args):
     else:
         raise ValueError(f'Unknown model: {args.model}')
 
+    # Use custom collate_fn for 2FF and 3FF models
+    collate_fn = None
+    if args.model == 'cnnlstm_2ff':
+        collate_fn = collate_2ff
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+        collate_fn = collate_3ff
+
     train_loader = DataLoader(
         train_ds, batch_size=args.batch_size, shuffle=True,
         num_workers=args.num_workers, pin_memory=True,
+        collate_fn=collate_fn
     )
     dev_loader = DataLoader(
         dev_ds, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=True,
+        collate_fn=collate_fn
     )
     return train_loader, dev_loader
 
 
 def build_eval_loader(args):
-    if args.model in ('ast', 'ssast'):
+    if args.model in ('ast', 'ssast', 'dass'):
         from datautils.dataset_ast import ASTDataset
         ds = ASTDataset(
             args.eval_protocol, split=None,
             target_length=args.target_length,
             freqm=0, timem=0,
             mean=args.norm_mean, std=args.norm_std,
+            is_train=False,
+        )
+    elif args.model == 'cnnlstm':
+        from datautils.dataset_cnnlstm import CNNLSTMDataset
+        ds = CNNLSTMDataset(
+            args.eval_protocol, split=None,
+            clip_duration=args.clip_duration, is_train=False,
+        )
+    elif args.model == 'cnnlstm_2ff':
+        from datautils.dataset_cnnlstm_2ff import CNNLSTM_2FF_Dataset, collate_2ff
+        f0_method = getattr(args, 'f0_method', 'crepe')
+        ds = CNNLSTM_2FF_Dataset(
+            args.eval_protocol, split=None,
+            clip_duration=args.clip_duration, is_train=False,
+            f0_method=f0_method
+        )
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+        from datautils.dataset_cnnlstm_3ff import CNNLSTM_3FF_Dataset, collate_3ff
+        f0_method = getattr(args, 'f0_method', 'crepe')
+        ds = CNNLSTM_3FF_Dataset(
+            args.eval_protocol, split=None,
+            clip_duration=args.clip_duration, is_train=False,
+            f0_method=f0_method
+        )
+    elif args.model in ('htsat', 'hubert', 'wav2vec2', 'cnn8rnn'):
+        if args.model in ('htsat', 'cnn8rnn'):
+            from datautils.dataset_htsat import HTSATDataset as ds_cls
+        else:
+            from datautils.dataset_hubert import HubertDataset as ds_cls
+        ds = ds_cls(
+            args.eval_protocol, split=None,
+            clip_duration=args.clip_duration,
             is_train=False,
         )
     elif args.model == 'fusion':
@@ -170,6 +351,22 @@ def _forward(model, batch, device, model_type):
         x, label = batch
         x, label = x.to(device), label.to(device)
         logits = model(x)
+    elif model_type in ('dass', 'cnnlstm', 'clap'):
+        x, label = batch
+        x, label = x.to(device), label.to(device)
+        logits = model(x)
+    elif model_type in ('htsat', 'hubert', 'wav2vec2', 'cnn8rnn'):
+        x, label = batch
+        x, label = x.to(device), label.to(device)
+        logits = model(x)  # x: (B, num_samples)
+    elif model_type == 'cnnlstm_2ff':
+        spec, f0, label = batch
+        logits = model(spec.to(device), f0.to(device))
+        label  = label.to(device)
+    elif model_type in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+        spec, mfcc, f0, label = batch
+        logits = model(spec.to(device), mfcc.to(device), f0.to(device))
+        label  = label.to(device)
     elif model_type == 'fusion':
         spec, mfcc, f0, label = batch
         logits = model(spec.to(device), mfcc.to(device), f0.to(device))
@@ -223,19 +420,43 @@ def produce_evaluation_file(model, loader, device, args, save_path):
     model.eval()
     os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
 
+    dataset   = loader.dataset
+    file_idx  = 0
+
+    class_cols = '\t'.join(LABEL_LIST)
     with torch.no_grad(), open(save_path, 'w') as fh:
+        fh.write(f'file_path\ttrue_label\tpredicted_label\tscore\t{class_cols}\n')
         for batch in tqdm(loader, desc='infer', ncols=100):
-            if args.model == 'ast':
-                x, _ = batch
-                logits = model(x.to(device))
-            elif args.model == 'fusion':
-                spec, mfcc, f0, _ = batch
-                logits = model(spec.to(device), mfcc.to(device), f0.to(device))
+            logits, labels = _forward(model, batch, device, args.model)
+            probs = torch.softmax(logits, dim=1)
+            scores, preds = probs.max(dim=1)
 
-            for pred in logits.argmax(1).cpu().numpy():
-                fh.write(f'{IDX2LABEL[int(pred)]}\n')
+            for i, (pred, score, true_label) in enumerate(zip(
+                    preds.cpu().numpy(),
+                    scores.cpu().numpy(),
+                    labels.cpu().numpy())):
+                file_path, _ = dataset.samples[file_idx]
+                file_idx += 1
+                class_scores = '\t'.join(f'{p:.4f}' for p in probs[i].cpu().numpy())
+                fh.write(
+                    f'{file_path}\t'
+                    f'{IDX2LABEL[int(true_label)]}\t'
+                    f'{IDX2LABEL[int(pred)]}\t'
+                    f'{float(score):.4f}\t'
+                    f'{class_scores}\n'
+                )
 
+    # 정확도 계산 후 출력
+    correct, total = 0, 0
+    with open(save_path) as fh:
+        next(fh)  # 헤더 skip
+        for line in fh:
+            parts = line.strip().split('\t')
+            if len(parts) == 4 and parts[1] == parts[2]:
+                correct += 1
+            total += 1
     print(f'Evaluation results saved to {save_path}')
+    print(f'Accuracy: {correct}/{total} = {correct/total*100:.2f}%')
 
 
 # ──────────────────────────────────────────
@@ -316,7 +537,7 @@ def main():
                              'CLI args override YAML values.')
 
     # ── Common ──
-    parser.add_argument('--model', type=str, default='ssast', choices=['ssast', 'ast', 'fusion'])
+    parser.add_argument('--model', type=str, default='ssast', choices=['ssast', 'ast', 'htsat', 'hubert', 'wav2vec2', 'cnn8rnn', 'dass', 'cnnlstm', 'clap', 'fusion'])
     parser.add_argument('--is_train', action='store_true')
     parser.add_argument('--is_eval',  action='store_true')
     parser.add_argument('--batch_size',           type=int,   default=32)
@@ -358,7 +579,27 @@ def main():
     parser.add_argument('--audioset_pretrain', action='store_true', default=False)
     parser.add_argument('--audioset_pretrain_path', type=str, default=None)
     parser.add_argument('--model_size', type=str, default='base384',
-                        choices=['tiny224', 'small224', 'base224', 'base384'])
+                        choices=['tiny224', 'small224', 'base224', 'base384', 'small', 'medium'])
+
+    # ── HTSAT / HuBERT 공통 ──
+    parser.add_argument('--clip_duration', type=float, default=10.0,
+                        help='Audio clip length in seconds (default: 10.0)')
+
+    # ── HuBERT ──
+    parser.add_argument('--pooling', type=str, default='mean',
+                        choices=['mean', 'first', 'attention'],
+                        help='HuBERT hidden state pooling method')
+    parser.add_argument('--freeze_feature_extractor', action='store_true', default=True,
+                        help='Freeze HuBERT CNN feature extractor during fine-tuning')
+    parser.add_argument('--no_freeze_feature_extractor', dest='freeze_feature_extractor',
+                        action='store_false')
+
+    # ── CLAP ──
+    parser.add_argument('--amodel', type=str, default='HTSAT-tiny',
+                        choices=['HTSAT-tiny', 'HTSAT-base'],
+                        help='CLAP audio encoder architecture')
+    parser.add_argument('--freeze_encoder', action='store_true', default=False,
+                        help='Freeze CLAP encoder, train head only')
 
     # ── Fusion ──
     parser.add_argument('--protocol_file', type=str, default=None)
@@ -386,7 +627,10 @@ def main():
     model = build_model(args, device)
     total     = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f'Parameters: {total:,} total, {trainable:,} trainable')
+    if args.is_eval:
+        print(f'Parameters: {total:,} total (eval mode — no gradient update)')
+    else:
+        print(f'Parameters: {total:,} total, {trainable:,} trainable')
 
     if args.model_path:
         model.load_state_dict(torch.load(args.model_path, map_location=device))
