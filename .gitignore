@@ -27,6 +27,7 @@ env/
 .venv
 fairseq_lib/
 
+
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb_checkpoints
@@ -42,6 +43,7 @@ out/
 runs/
 *.log
 tensorboard/
+results/
 
 # Data
 Datasets/
@@ -80,3 +82,5 @@ temp/
 # Evaluation outputs
 eval_scores.txt
 scores.txt
+results/
+*.txt
