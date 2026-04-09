@@ -25,6 +25,7 @@ venv/
 ENV/
 env/
 .venv
+fairseq_lib/
 
 # Jupyter Notebook
 .ipynb_checkpoints
