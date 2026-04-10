@@ -8,7 +8,6 @@ CNNLSTMDataset — mel spectrogram dataset for CNNLSTMClassifier
 import random
 import torch
 import torchaudio
-from datautils.audio_io import load_audio
 import torchaudio.transforms as T
 from torch.utils.data import Dataset
 
@@ -18,6 +17,10 @@ LABEL_LIST = [
     'reverberation', 'auto_tune',
 ]
 LABEL2IDX = {l: i for i, l in enumerate(LABEL_LIST)}
+
+# high_pass_filter와 low_pass_filter를 band_pass_filter로 매핑
+LABEL2IDX['high_pass_filter'] = LABEL2IDX['band_pass_filter']
+LABEL2IDX['low_pass_filter'] = LABEL2IDX['band_pass_filter']
 
 TARGET_SR   = 22050
 N_MELS      = 128
@@ -65,7 +68,7 @@ class CNNLSTMDataset(Dataset):
     def __getitem__(self, idx):
         path, label = self.samples[idx]
 
-        waveform, sr = load_audio(path)
+        waveform, sr = torchaudio.load(path)
         if waveform.shape[0] > 1:
             waveform = waveform.mean(dim=0, keepdim=True)
 

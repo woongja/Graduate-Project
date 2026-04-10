@@ -1,0 +1,28 @@
+# ── CNN8RNN 3-Feature Fusion with Cross-Modal Attention Config ──────
+model: cnn8rnn_3ff_crossmodal
+
+# 모델 하이퍼파라미터
+branch_output_dim: 512     # 각 branch의 output dimension
+num_attention_heads: 8     # Cross-modal attention heads
+dropout: 0.5               # dropout rate
+
+# F0 추출 방법
+f0_method: crepe           # 'crepe' or 'yin'
+
+# 오디오 설정
+clip_duration: 10.0        # 오디오 클립 길이 (초)
+
+# 학습 설정
+batch_size: 12             # 3FF는 feature 많아서 배치 사이즈 더 작게
+num_epochs: 100
+learning_rate: 1.0e-4
+early_stop_patience: 10
+num_workers: 2             # F0 추출 때문에 workers 줄임
+
+# 프로토콜 파일
+train_protocol: ../protocols/train_protocol.txt
+eval_protocol:  ../protocols/eval_protocol.txt
+
+# 저장 경로
+save_path: ../out/cnn8rnn_3ff_crossmodal
+log_dir:   ../runs/cnn8rnn_3ff_crossmodal

@@ -1,0 +1,46 @@
+# ConformerTCM Multi-LoRA Training (Group 7: pitch_shift+time_stretch)
+
+model:
+  name: conformertcm
+  ssl_model_path: /home/woongjae/ADD_LAB/projects/Graduate-Project/02_LoRA_Training/pretrained/xlsr2_300m.pt
+  base_model_path: /home/woongjae/ADD_LAB/projects/Graduate-Project/02_LoRA_Training/pretrained/conformertcm.pth
+  emb_size: 144
+  heads: 4
+  kernel_size: 31
+  num_encoders: 4
+
+
+lora:
+  r: 16
+  alpha: 16
+  dropout: 0.0
+  target_modules: [q_proj, v_proj, k_proj, out_proj, fc1, fc2, LL]
+
+data:
+  name: data_utils
+  train_protocol: protocols/asv19_train.txt
+  dev_protocol: protocols/asv19_dev.txt
+  audio_dir: /path/to/dataset
+  batch_size: 32
+  num_workers: 8
+  sample_rate: 16000
+  max_length: 64600
+  padding_type: repeat
+  random_start: true
+  augmentation_type: none
+
+training:
+  mode: multi_lora
+  num_domains: 8
+  current_domain: 7
+  num_epochs: 100
+  lr: 0.00001
+  weight_decay: 0.0001
+  device: cuda:0
+  save_dir: out/conformertcm_multi_lora/g7
+  early_stop_patience: 5
+  class_weights: [0.9, 0.1]
+
+logging:
+  use_tensorboard: true
+  tensorboard_dir: runs/conformertcm_multi_lora/g7

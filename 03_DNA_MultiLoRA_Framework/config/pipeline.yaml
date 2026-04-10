@@ -1,0 +1,88 @@
+# ============================================================
+# DNA-MultiLoRA Pipeline Configuration
+#
+# noise_classifier + add_model 조합을 여기서 설정합니다.
+# eval.py에서 이 파일을 읽어 파이프라인을 구성합니다.
+# ============================================================
+
+# ── 노이즈 분류 모듈 (사용할 것을 선택) ──
+noise_classifiers:
+  cnn8rnn_3ff_crossmodal:
+    module: cnn8rnn_3ff_crossmodal
+    checkpoint: ../01_Noise_Classification/out/cnn8rnn_3ff_crossmodal/best.pth
+  cnn8rnn_3ff_base:
+    module: cnn8rnn_3ff_base
+    checkpoint: ../01_Noise_Classification/out/cnn8rnn_3ff_base/best.pth
+  cnnlstm:
+    module: cnnlstm
+    checkpoint: ../01_Noise_Classification/out/cnnlstm/best.pth
+  ssast_tiny:
+    module: ssast_model
+    checkpoint: ../01_Noise_Classification/out/ssast_tiny_patch_400/best.pth
+  htsat:
+    module: htsat_model
+    checkpoint: ../01_Noise_Classification/out/htsat/best.pth
+
+# ── 10클래스 → 7도메인 매핑 ──
+# NC 출력: 0:clean 1:bg_noise 2:bg_music 3:gaussian 4:bandpass 5:echo 6:pitch_shift 7:time_stretch 8:reverb 9:auto_tune
+class_to_domain:
+  0: 0    # clean → D0 (no LoRA)
+  1: 1    # bg_noise → D1
+  2: 1    # bg_music → D1
+  3: 6    # gaussian → D6
+  4: 3    # bandpass → D3
+  5: 4    # echo → D4
+  6: 5    # pitch_shift → D5
+  7: 5    # time_stretch → D5
+  8: 7    # reverb → D7
+  9: 2    # auto_tune → D2
+
+# ── ADD 모델 + LoRA 설정 ──
+add_models:
+  aasist:
+    model_module: aasist
+    pretrained: ../02_LoRA_Training/pretrained/aasist.pth
+    config: ../02_LoRA_Training/config/aasist_baseline.yaml
+    lora:
+      r: 32
+      alpha: 64
+      target_modules: [q_proj, v_proj, k_proj, out_proj, fc1, fc2, LL]
+      checkpoints:
+        D1: ../02_LoRA_Training/out/hp_search/aasist_lr5e-05_r32_a64/D1_best.pth
+        D2: ../02_LoRA_Training/out/domain_lora/aasist/D2_lr5e-05_r32_a64/D2_best.pth
+        D3: ../02_LoRA_Training/out/domain_lora/aasist/D3_lr5e-05_r32_a64/D3_best.pth
+        D4: ../02_LoRA_Training/out/domain_lora/aasist/D4_lr5e-05_r32_a64/D4_best.pth
+        D5: ../02_LoRA_Training/out/domain_lora/aasist/D5_lr5e-05_r32_a64/D5_best.pth
+        D6: ../02_LoRA_Training/out/domain_lora/aasist/D6_lr5e-05_r32_a64/D6_best.pth
+        D7: ../02_LoRA_Training/out/domain_lora/aasist/D7_lr5e-05_r32_a64/D7_best.pth
+
+  conformertcm:
+    model_module: conformertcm
+    pretrained: ../02_LoRA_Training/pretrained/conformertcm.pth
+    config: ../02_LoRA_Training/config/conformertcm_baseline.yaml
+    lora:
+      r: 16
+      alpha: 32
+      target_modules: [q_proj, v_proj, k_proj, out_proj, fc1, fc2, LL]
+      checkpoints:
+        D1: ../02_LoRA_Training/out/hp_search/conformertcm_lr0.0001_r16_a32/D1_best.pth
+        D2: ../02_LoRA_Training/out/domain_lora/conformertcm/D2_lr0.0001_r16_a32/D2_best.pth
+        D3: ../02_LoRA_Training/out/domain_lora/conformertcm/D3_lr0.0001_r16_a32/D3_best.pth
+        D4: ../02_LoRA_Training/out/domain_lora/conformertcm/D4_lr0.0001_r16_a32/D4_best.pth
+        D5: ../02_LoRA_Training/out/domain_lora/conformertcm/D5_lr0.0001_r16_a32/D5_best.pth
+        D6: ../02_LoRA_Training/out/domain_lora/conformertcm/D6_lr0.0001_r16_a32/D6_best.pth
+        D7: ../02_LoRA_Training/out/domain_lora/conformertcm/D7_lr0.0001_r16_a32/D7_best.pth
+
+# ── 평가 데이터셋 ──
+eval:
+  asv19:
+    protocol: ../02_LoRA_Training/protocols/asv19_eval.txt
+    type: nc  # abs_path label aug_type
+  df21:
+    protocol: ../02_LoRA_Training/protocols/df21_eval.txt
+    type: nc
+  itw:
+    protocol: ../02_LoRA_Training/protocols/original/protocol_itw.txt
+    base_dir: /home/woongjae/ADD_LAB/Datasets/itw
+    type: original  # key subset label
+  batch_size: 64

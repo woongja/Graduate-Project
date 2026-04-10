@@ -35,6 +35,10 @@ LABEL_LIST = [
 ]
 LABEL2IDX = {l: i for i, l in enumerate(LABEL_LIST)}
 
+# high_pass_filter와 low_pass_filter를 band_pass_filter로 매핑
+LABEL2IDX['high_pass_filter'] = LABEL2IDX['band_pass_filter']
+LABEL2IDX['low_pass_filter'] = LABEL2IDX['band_pass_filter']
+
 TARGET_SR   = 22050
 N_MELS      = 128
 N_MFCC      = 40

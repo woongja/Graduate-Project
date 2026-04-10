@@ -27,7 +27,6 @@ env/
 .venv
 fairseq_lib/
 
-
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb_checkpoints
@@ -70,6 +69,10 @@ xlsr2_300m.pt
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code / OMC
+.omc/
+.claude/
 
 # Temporary files
 tmp/

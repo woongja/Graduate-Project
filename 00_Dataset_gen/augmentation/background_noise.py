@@ -50,9 +50,10 @@ class BackgroundNoiseAugmentor(BaseAugmentor):
         signal_power = self.audio_data.dBFS
         noise_power = noise_file.dBFS
 
-        # Calculate the scaling factor for the noise
-        scaling_factor = SNR_dB * noise_power / signal_power
+        # Calculate the gain to apply to noise for desired SNR
+        # SNR = signal_dBFS - noise_dBFS => noise_gain = signal_dBFS - noise_dBFS - SNR_dB
+        noise_gain = signal_power - noise_power - SNR_dB
+        scaled_noise = noise_file.apply_gain(noise_gain)
 
-        # Apply the noise to the audio file
-        scaled_audio = self.audio_data.apply_gain(scaling_factor)
-        self.augmented_audio = scaled_audio.overlay(noise_file)
+        # Overlay scaled noise onto original (unmodified) signal
+        self.augmented_audio = self.audio_data.overlay(scaled_noise)

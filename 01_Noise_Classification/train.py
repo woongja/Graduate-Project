@@ -1,11 +1,12 @@
 import argparse
 import os
 import sys
+import random
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.cuda.amp import GradScaler
+from torch.amp import GradScaler
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -134,6 +135,64 @@ def build_model(args, device):
             branch_output_dim=getattr(args, 'branch_output_dim', 512),
             dropout=getattr(args, 'dropout', 0.5)
         )
+    elif args.model == 'cnnlstm_3ff_softmax':
+        from model.cnnlstm_3ff_softmax import create_cnnlstm_3ff_softmax
+        model = create_cnnlstm_3ff_softmax(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnnlstm_3ff_gating':
+        from model.cnnlstm_3ff_gating import create_cnnlstm_3ff_gating
+        model = create_cnnlstm_3ff_gating(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnnlstm_3ff_crossmodal':
+        from model.cnnlstm_3ff_crossmodal import create_cnnlstm_3ff_crossmodal
+        model = create_cnnlstm_3ff_crossmodal(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            num_attention_heads=getattr(args, 'num_attention_heads', 8),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnn8rnn_3ff_base':
+        from model.cnn8rnn_3ff_base import create_cnn8rnn_3ff_base
+        model = create_cnn8rnn_3ff_base(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnn8rnn_3ff_sigmoid':
+        from model.cnn8rnn_3ff_sigmoid import create_cnn8rnn_3ff_sigmoid
+        model = create_cnn8rnn_3ff_sigmoid(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnn8rnn_3ff_softmax':
+        from model.cnn8rnn_3ff_softmax import create_cnn8rnn_3ff_softmax
+        model = create_cnn8rnn_3ff_softmax(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnn8rnn_3ff_gating':
+        from model.cnn8rnn_3ff_gating import create_cnn8rnn_3ff_gating
+        model = create_cnn8rnn_3ff_gating(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
+    elif args.model == 'cnn8rnn_3ff_crossmodal':
+        from model.cnn8rnn_3ff_crossmodal import create_cnn8rnn_3ff_crossmodal
+        model = create_cnn8rnn_3ff_crossmodal(
+            num_classes=NUM_CLASSES,
+            branch_output_dim=getattr(args, 'branch_output_dim', 512),
+            num_attention_heads=getattr(args, 'num_attention_heads', 8),
+            dropout=getattr(args, 'dropout', 0.5)
+        )
     elif args.model == 'dass':
         from model.dass_model import DASSClassifier
         model = DASSClassifier(
@@ -196,7 +255,10 @@ def build_loaders(args):
             clip_duration=args.clip_duration, is_train=False,
             f0_method=f0_method
         )
-    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight',
+                        'cnnlstm_3ff_softmax', 'cnnlstm_3ff_gating', 'cnnlstm_3ff_crossmodal',
+                        'cnn8rnn_3ff_base', 'cnn8rnn_3ff_sigmoid', 'cnn8rnn_3ff_softmax',
+                        'cnn8rnn_3ff_gating', 'cnn8rnn_3ff_crossmodal'):
         from datautils.dataset_cnnlstm_3ff import CNNLSTM_3FF_Dataset, collate_3ff
         f0_method = getattr(args, 'f0_method', 'crepe')
         train_ds = CNNLSTM_3FF_Dataset(
@@ -248,7 +310,10 @@ def build_loaders(args):
     collate_fn = None
     if args.model == 'cnnlstm_2ff':
         collate_fn = collate_2ff
-    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight',
+                        'cnnlstm_3ff_softmax', 'cnnlstm_3ff_gating', 'cnnlstm_3ff_crossmodal',
+                        'cnn8rnn_3ff_base', 'cnn8rnn_3ff_sigmoid', 'cnn8rnn_3ff_softmax',
+                        'cnn8rnn_3ff_gating', 'cnn8rnn_3ff_crossmodal'):
         collate_fn = collate_3ff
 
     train_loader = DataLoader(
@@ -288,7 +353,10 @@ def build_eval_loader(args):
             clip_duration=args.clip_duration, is_train=False,
             f0_method=f0_method
         )
-    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+    elif args.model in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight',
+                        'cnnlstm_3ff_softmax', 'cnnlstm_3ff_gating', 'cnnlstm_3ff_crossmodal',
+                        'cnn8rnn_3ff_base', 'cnn8rnn_3ff_sigmoid', 'cnn8rnn_3ff_softmax',
+                        'cnn8rnn_3ff_gating', 'cnn8rnn_3ff_crossmodal'):
         from datautils.dataset_cnnlstm_3ff import CNNLSTM_3FF_Dataset, collate_3ff
         f0_method = getattr(args, 'f0_method', 'crepe')
         ds = CNNLSTM_3FF_Dataset(
@@ -363,7 +431,10 @@ def _forward(model, batch, device, model_type):
         spec, f0, label = batch
         logits = model(spec.to(device), f0.to(device))
         label  = label.to(device)
-    elif model_type in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight'):
+    elif model_type in ('cnnlstm_3ff', 'cnnlstm_3ff_interaction', 'cnnlstm_3ff_weight',
+                         'cnnlstm_3ff_softmax', 'cnnlstm_3ff_gating', 'cnnlstm_3ff_crossmodal',
+                         'cnn8rnn_3ff_base', 'cnn8rnn_3ff_sigmoid', 'cnn8rnn_3ff_softmax',
+                         'cnn8rnn_3ff_gating', 'cnn8rnn_3ff_crossmodal'):
         spec, mfcc, f0, label = batch
         logits = model(spec.to(device), mfcc.to(device), f0.to(device))
         label  = label.to(device)
@@ -382,7 +453,7 @@ def train_epoch(model, loader, optimizer, criterion, device, args, scaler=None):
         optimizer.zero_grad()
 
         if scaler is not None:
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 logits, label = _forward(model, batch, device, args.model)
                 loss = criterion(logits, label)
             scaler.scale(loss).backward()
@@ -452,7 +523,7 @@ def produce_evaluation_file(model, loader, device, args, save_path):
         next(fh)  # 헤더 skip
         for line in fh:
             parts = line.strip().split('\t')
-            if len(parts) == 4 and parts[1] == parts[2]:
+            if len(parts) >= 3 and parts[1] == parts[2]:
                 correct += 1
             total += 1
     print(f'Evaluation results saved to {save_path}')
@@ -537,7 +608,15 @@ def main():
                              'CLI args override YAML values.')
 
     # ── Common ──
-    parser.add_argument('--model', type=str, default='ssast', choices=['ssast', 'ast', 'htsat', 'hubert', 'wav2vec2', 'cnn8rnn', 'dass', 'cnnlstm', 'clap', 'fusion'])
+    parser.add_argument('--model', type=str, default='ssast', choices=[
+        'ssast', 'ast', 'htsat', 'hubert', 'wav2vec2',
+        'cnn8rnn', 'cnn8rnn_3ff_base', 'cnn8rnn_3ff_sigmoid', 'cnn8rnn_3ff_softmax',
+        'cnn8rnn_3ff_gating', 'cnn8rnn_3ff_crossmodal',
+        'cnnlstm', 'cnnlstm_2ff', 'cnnlstm_3ff', 'cnnlstm_3ff_interaction',
+        'cnnlstm_3ff_weight', 'cnnlstm_3ff_softmax', 'cnnlstm_3ff_gating',
+        'cnnlstm_3ff_crossmodal',
+        'dass', 'clap', 'fusion'
+    ])
     parser.add_argument('--is_train', action='store_true')
     parser.add_argument('--is_eval',  action='store_true')
     parser.add_argument('--batch_size',           type=int,   default=32)
@@ -619,6 +698,16 @@ def main():
 
     args = parser.parse_args()
 
+    # Set random seed for reproducibility
+    seed = getattr(args, 'seed', 42)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Device: {device}')
     if torch.cuda.is_available():
@@ -646,7 +735,7 @@ def main():
         criterion = nn.CrossEntropyLoss()
         optimizer = Adam(model.parameters(), lr=args.learning_rate)
         writer    = SummaryWriter(log_dir=args.log_dir)
-        scaler    = GradScaler() if (args.model == 'ast' and device.type == 'cuda') else None
+        scaler    = GradScaler('cuda') if (args.model == 'ast' and device.type == 'cuda') else None
 
         print(f'\nTraining {args.model.upper()}  '
               f'train={len(train_loader.dataset)}  '

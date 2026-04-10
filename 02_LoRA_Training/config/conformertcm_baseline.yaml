@@ -1,0 +1,8 @@
+model:
+  name: conformertcm
+  emb_size: 144
+  heads: 4
+  kernel_size: 31
+  num_encoders: 4
+data:
+  name: data_utils

@@ -25,5 +25,5 @@ class ResampleAugmentor(BaseAugmentor):
         Time stretch the audio using librosa time stretch method
         """
         self.augmented_audio = self.my_transform(
-            samples=self.audio_data, sample_rate=self.sr)
+            samples=self.data, sample_rate=self.sr)
         self.augmented_audio = librosa_to_pydub(self.augmented_audio)

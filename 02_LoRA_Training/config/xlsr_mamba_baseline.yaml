@@ -1,0 +1,6 @@
+model:
+  name: xlsr_mamba
+  emb_size: 144
+  num_encoders: 12
+data:
+  name: data_utils

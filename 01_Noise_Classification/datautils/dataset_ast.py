@@ -1,7 +1,7 @@
 import torch
 import torchaudio
 from torch.utils.data import Dataset
-from datautils.audio_io import load_audio
+
 
 # aug_type → integer label mapping (10 classes)
 # high_pass_filter and low_pass_filter are merged as band_pass_filter
@@ -18,6 +18,11 @@ LABEL_LIST = [
     'auto_tune',        # 9
 ]
 LABEL2IDX = {l: i for i, l in enumerate(LABEL_LIST)}
+
+# high_pass_filter와 low_pass_filter를 band_pass_filter로 매핑
+LABEL2IDX['high_pass_filter'] = LABEL2IDX['band_pass_filter']
+LABEL2IDX['low_pass_filter'] = LABEL2IDX['band_pass_filter']
+
 NUM_CLASSES = len(LABEL_LIST)
 
 
@@ -86,17 +91,31 @@ class ASTDataset(Dataset):
             raise ValueError(f'Unknown labels in protocol: {unknown}')
 
         from collections import Counter
-        counts = Counter(lbl for _, lbl in self.samples)
+        # 원본 레이블 카운트
+        original_counts = Counter(lbl for _, lbl in self.samples)
+        # 매핑된 레이블 카운트
+        mapped_counts = Counter(LABEL2IDX[lbl] for _, lbl in self.samples)
+
         tag = split if split else 'all'
         print(f'[ASTDataset/{tag}] {len(self.samples)} samples  |  classes: {NUM_CLASSES}')
-        for lbl in LABEL_LIST:
-            print(f'  {lbl}: {counts.get(lbl, 0)}')
+        for i, lbl in enumerate(LABEL_LIST):
+            count = mapped_counts.get(i, 0)
+            # high_pass_filter와 low_pass_filter가 매핑된 경우 표시
+            if lbl == 'band_pass_filter':
+                hp_count = original_counts.get('high_pass_filter', 0)
+                lp_count = original_counts.get('low_pass_filter', 0)
+                if hp_count > 0 or lp_count > 0:
+                    print(f'  {lbl}: {count} (high_pass: {hp_count}, low_pass: {lp_count})')
+                else:
+                    print(f'  {lbl}: {count}')
+            else:
+                print(f'  {lbl}: {count}')
 
     def __len__(self):
         return len(self.samples)
 
     def _load_fbank(self, path):
-        waveform, sr = load_audio(path)
+        waveform, sr = torchaudio.load(path)
         waveform = waveform - waveform.mean()
         fbank = torchaudio.compliance.kaldi.fbank(
             waveform,

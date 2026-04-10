@@ -50,6 +50,7 @@ class TelephoneEncodingAugmentor(BaseAugmentor):
         super().__init__(config)
         self.encoding = config.get("encoding", "g722")
         self.bandpass = config.get("bandpass", None)
+        self.effects = None
         if self.bandpass:
             self.effects = ",".join(
                 [
